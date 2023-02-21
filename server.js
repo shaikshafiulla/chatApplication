@@ -94,13 +94,12 @@ const server = net.createServer((socket) => {
           )
             socket.password = message[1].trim();
           break;
-      case 13:
-        removeUserFromGroup(socket, message);
-        break;
-      case 14:
-              Logout(socket);
-              break;
-              
+        case 13:
+          removeUserFromGroup(socket, message);
+          break;
+        case 14:
+          Logout(socket);
+          break;
       }
     } else {
       // let message = data.toString().trim().split(".");
@@ -148,20 +147,23 @@ const server = net.createServer((socket) => {
   });
 
   socket.on("end", () => {
-    clients.delete(clientNumber);
+    delete SOCKETS[socket.id];
+    activeClients.delete(socket.id);
     console.log(chalk.blue.bgRed.bold(`Client ${clientNumber} disconnected`));
   });
 
   socket.on("error", (err) => {
+    delete SOCKETS[socket.id];
+    activeClients.delete(socket.id);
     console.error(chalk.blue.bgRed.bold(`${socket.id} is disconnected `));
     socket.destroy();
-    activeClients.delete(socket.id);
   });
 });
 
 server.on("error", (err) => {
   console.error(chalk.blue.bgRed.bold(`${err.message}`));
   throw err;
+  
 });
 
 function requestChat(socket, message) {
@@ -353,7 +355,7 @@ function removeUserFromGroup(socket, message) {
   recepient = SOCKETS[Number(message[1])];
   if (recepient && recepient.isGroupChatting) {
     let status = false;
-    for (let [ gName, admin ] of groupAdmins) {
+    for (let [gName, admin] of groupAdmins) {
       //check if client is admin or not.. and recepient is in group or not..
       if (admin == socket.id && recepient.groupChatName == gName) {
         // client is admin and can delete user..
@@ -365,10 +367,10 @@ function removeUserFromGroup(socket, message) {
             ` Client ${recepient.username} removed from ${gName} successfully `
           )
         );
-      } 
+      }
     }
-    if(status == false){
-        socket.write(chalk.redBright.bold(" Invalid details.."));
+    if (status == false) {
+      socket.write(chalk.redBright.bold(" Invalid details.."));
     }
   } else {
     socket.write(chalk.redBright.bold(" Invalid details........"));
@@ -378,30 +380,30 @@ function removeUserFromGroup(socket, message) {
 function Logout(socket) {
   socket.isGroupChatting = false;
   socket.isChatting = false;
-  for (let [ gName, admin ] of groupAdmins) {
+  for (let [gName, admin] of groupAdmins) {
     //check if client is admin or not..
     if (admin == socket.id) {
       // client is admin and can delete group..
 
       //remove clients
-    let values = map.get(gName);
-    if (values != undefined) {
-      for (let value of values) {
-        clientid = value;
-        client = SOCKETS[clientid];
-        client.isGroupChatting = false;
+      let values = map.get(gName);
+      if (values != undefined) {
+        for (let value of values) {
+          clientid = value;
+          client = SOCKETS[clientid];
+          client.isGroupChatting = false;
+        }
+        activegroups.delete(gName);
+        groupAdmins.delete(gName);
       }
-      activegroups.delete(gName);
-      groupAdmins.delete(gName);
-    }
-    //delete group
+      //delete group
       map.delete(gName);
-    } 
+    }
   }
-
   socket.write(
-    chalk.green.bold(
-      ` Client ${socket.username} Logged out successfully `
-    )
+    chalk.green.bold(` Client ${socket.username} Logged out successfully `)
   );
+  delete SOCKETS[socket.id];
+  activeClients.delete(socket.id);
+
 }

@@ -132,6 +132,7 @@ rl.on("line", async (line) => {
       break;
     case "14":
         client.write(`14.`);
+        process.exit();
     default:
       client.write(line);
       break;
