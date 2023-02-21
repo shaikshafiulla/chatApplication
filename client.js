@@ -38,6 +38,12 @@ rl.on("line", async (line) => {
   switch (line) {
     case "0":
       term.clear();
+      term.cyan(
+        chalk.greenBright.bold(heading) +
+          " 🤟" +
+          "\n" +
+          chalk.yellowBright.bold(footer)
+      );
       showMenu();
       break;
     case "1":
@@ -115,6 +121,14 @@ rl.on("line", async (line) => {
         }
       });
       break;
+    case "13":
+      rl.question(
+        chalk.greenBright.bold("Enter recepient id : "),
+        (id) => {
+          client.write(`13. ${id}`);
+        }
+      );
+      break;
     default:
       client.write(line);
       break;
@@ -135,7 +149,7 @@ function showMenu() {
   console.log(chalk.yellowBright.bold("10. Accept request"));
   console.log(chalk.yellowBright.bold("11. disconnect from Group"));
   console.log(chalk.yellowBright.bold("12. change password"));
-
+  console.log(chalk.yellowBright.bold("13. Remove User from Group"));
   console.log(chalk.blueBright.bold("Enter a command number:"));
 }
 

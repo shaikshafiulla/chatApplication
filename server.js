@@ -1,7 +1,7 @@
 const net = require("net");
 const multimap = require("multimap");
 const chalk = require("chalk");
-const pswd = require('./pswdchange');
+const pswd = require("./pswdchange");
 
 var nextClientNumber = 1;
 var activeClients = new Set();
@@ -26,7 +26,7 @@ const server = net.createServer((socket) => {
     var message = data.toString().trim();
     // console.log(chalk.blue.bgYellow.bold(socket.id + " : " + message));
     message = message.split(".");
-    console.log(chalk.blue.bgRed.bold(message));
+    console.log(chalk.blue.bgRed.bold(`received message from ${socket.id}`));
 
     if (!isNaN(message[0])) {
       const request = Number(message[0]);
@@ -53,13 +53,13 @@ const server = net.createServer((socket) => {
           break;
 
         case 4:
-
           data = "";
           for (const element of activeClients) {
-            if (element!= socket.id) 
-            data += element.toString() + " ";
+            if (element != socket.id) data += element.toString() + " ";
           }
-          socket.write(`-----> ${activeClients.size-1} active clients\n ${data}`);
+          socket.write(
+            `-----> ${activeClients.size - 1} active clients\n ${data}`
+          );
           break;
 
         case 5:
@@ -85,12 +85,18 @@ const server = net.createServer((socket) => {
           GroupDisconnect(socket, message);
           break;
         case 12:
-          if(pswd.change_pswd(socket.username, socket.password,message[1].trim()))
-          socket.password = message[1].trim();
+          if (
+            pswd.change_pswd(
+              socket.username,
+              socket.password,
+              message[1].trim()
+            )
+          )
+            socket.password = message[1].trim();
           break;
-          
-          
-
+      case 13:
+        removeUserFromGroup(socket, message);
+        break;
       }
     } else {
       // let message = data.toString().trim().split(".");
@@ -109,15 +115,13 @@ const server = net.createServer((socket) => {
         for (let value of values) {
           recepientId = value;
           recepient = SOCKETS[recepientId];
-          if(recepient!=socket)
-          recepient.write(message + "\n");
+          if (recepient != socket) recepient.write(message + "\n");
         }
-      } else if(!addingStatus && message[2]=='#'){
+      } else if (!addingStatus && message[2] == "#") {
         socket.username = message[0];
         socket.password = message[1];
         addStatus = true;
-      }
-      else{
+      } else {
         socket.write(" INVALID ENTRY!!\n");
       }
 
@@ -162,9 +166,7 @@ function requestChat(socket, message) {
     chatreq.set(recepient.id, socket.id);
     socket.write(chalk.blueBright.bold("  Request sent  😍"));
   } else {
-    socket.write(
-      chalk.blue.bold("...🫥 Invalid client number 🫥....")
-    );
+    socket.write(chalk.blue.bold("...🫥 Invalid client number 🫥...."));
   }
 }
 
@@ -227,28 +229,32 @@ function isExist(name) {
 }
 
 function groupChat(message, socket) {
-  if(!socket.isGroupChatting){
-  console.log(
-    `Client ${socket.id,socket.username} is initiated group chat with group -> ${message[1]} 😍`
-  );
-  socket.isGroupChatting = true;
-  socket.groupChatName = message[1];
-  map.set(message[1], socket.id);
-  }
-  else{
-    socket.write(chalk.greenBright.bold(`Hey!, you are already in the group ${socket.groupChatName} 😂`));
+  if (!socket.isGroupChatting) {
+    console.log(
+      `Client ${
+        (socket.id, socket.username)
+      } is initiated group chat with group -> ${message[1]} 😍`
+    );
+    socket.isGroupChatting = true;
+    socket.groupChatName = message[1];
+    map.set(message[1], socket.id);
+  } else {
+    socket.write(
+      chalk.greenBright.bold(
+        `Hey!, you are already in the group ${socket.groupChatName} 😂`
+      )
+    );
   }
 }
 
 function createGroup(message, socket) {
-  if(activegroups.has(message[1])){
+  if (activegroups.has(message[1])) {
     socket.write(chalk.redBright.bold("..Group already exists 💁‍♂️.."));
+  } else {
+    activegroups.add(message[1]);
+    groupAdmins.set(message[1], socket.id);
+    socket.write(`Group ${message[1]} created successfully 😍😍\n`);
   }
-  else{
-  activegroups.add(message[1]);
-  groupAdmins.set(message[1], socket.id);
-  socket.write(`Group ${message[1]} created successfully 😍😍\n`);
-}
 }
 
 function activeGroups(socket) {
@@ -269,9 +275,7 @@ function disconnect(socket, message) {
     coordinated.delete(socket.id, recepient.id);
     coordinated.delete(recepient.id, socket.id);
   } else {
-    socket.write(
-      chalk.blue.bold(".....DISCONNECTION IS NOT POSSIBLE 💁‍♂️...\n")
-    );
+    socket.write(chalk.blue.bold(".....DISCONNECTION IS NOT POSSIBLE 💁‍♂️...\n"));
   }
 
   // if (socket.isChatting) {
@@ -304,19 +308,21 @@ function deleteGroup(socket, message) {
   ) {
     socket.write(`Group ${message[1]} deleted successfully 🤕`);
     let values = map.get(message[1]);
-    if(values!= undefined){
-    for (let value of values) {
-      clientid = value;
-      client = SOCKETS[clientid];
-      client.isGroupChatting = false;
+    if (values != undefined) {
+      for (let value of values) {
+        clientid = value;
+        client = SOCKETS[clientid];
+        client.isGroupChatting = false;
+      }
+      activegroups.delete(message[1]);
+      groupAdmins.delete(message[1]);
     }
-    activegroups.delete(message[1]);
-    groupAdmins.delete(message[1]);
-  }
   } else if (!activegroups.has(message[1])) {
     socket.write("No such group to delete 🤕\n");
   } else if (!groupAdmins.get(message[1]) == socket.id) {
-    socket.write(chalk.redBright.bold("You are not authorized to delete this group 💁‍♂️\n"));
+    socket.write(
+      chalk.redBright.bold("You are not authorized to delete this group 💁‍♂️\n")
+    );
   } else {
     socket.write(chalk.redBright.bold("Invalid 💁‍♂️"));
   }
@@ -327,9 +333,10 @@ function GroupDisconnect(socket, message) {
   if (isExist(groupname) && socket.groupChatName == groupname) {
     socket.isGroupChatting = false;
     map.delete(groupname, socket.id);
-    socket.write(`Disconnected from ${groupname} successfully 🤕`);
-  }
-  else{
+    socket.write(
+      chalk.green.bold(`Disconnected from ${groupname} successfully 🤕`)
+    );
+  } else {
     socket.write(chalk.redBright.bold("INVALID 🫠"));
   }
 }
@@ -337,3 +344,29 @@ function GroupDisconnect(socket, message) {
 server.listen(8080, () => {
   console.log(chalk.green.bold("Server connected 🤝"));
 });
+
+function removeUserFromGroup(socket, message) {
+  recepient = SOCKETS[Number(message[1])];
+  if (recepient && recepient.isGroupChatting) {
+    let status = false;
+    for (let [ gName, admin ] of groupAdmins) {
+      //check if client is admin or not.. and recepient is in group or not..
+      if (admin == socket.id && recepient.groupChatName == gName) {
+        // client is admin and can delete user..
+        map.delete(gName, recepient.id);
+        recepient.isGroupChatting = false;
+        status = true;
+        socket.write(
+          chalk.green.bold(
+            ` Client ${recepient.username} removed from ${gName} successfully `
+          )
+        );
+      } 
+    }
+    if(status == false){
+        socket.write(chalk.redBright.bold(" Invalid details.."));
+    }
+  } else {
+    socket.write(chalk.redBright.bold(" Invalid details........"));
+  }
+}
