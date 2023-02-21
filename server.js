@@ -97,6 +97,10 @@ const server = net.createServer((socket) => {
       case 13:
         removeUserFromGroup(socket, message);
         break;
+      case 14:
+              Logout(socket);
+              break;
+              
       }
     } else {
       // let message = data.toString().trim().split(".");
@@ -369,4 +373,35 @@ function removeUserFromGroup(socket, message) {
   } else {
     socket.write(chalk.redBright.bold(" Invalid details........"));
   }
+}
+
+function Logout(socket) {
+  socket.isGroupChatting = false;
+  socket.isChatting = false;
+  for (let [ gName, admin ] of groupAdmins) {
+    //check if client is admin or not..
+    if (admin == socket.id) {
+      // client is admin and can delete group..
+
+      //remove clients
+    let values = map.get(gName);
+    if (values != undefined) {
+      for (let value of values) {
+        clientid = value;
+        client = SOCKETS[clientid];
+        client.isGroupChatting = false;
+      }
+      activegroups.delete(gName);
+      groupAdmins.delete(gName);
+    }
+    //delete group
+      map.delete(gName);
+    } 
+  }
+
+  socket.write(
+    chalk.green.bold(
+      ` Client ${socket.username} Logged out successfully `
+    )
+  );
 }

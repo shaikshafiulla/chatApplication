@@ -20,6 +20,7 @@ client.connect(8080, "localhost", () => {
 });
 
 client.on("data", (data) => {
+
   term.clear();
   term.cyan(
     chalk.greenBright.bold(heading) +
@@ -129,6 +130,8 @@ rl.on("line", async (line) => {
         }
       );
       break;
+    case "14":
+        client.write(`14.`);
     default:
       client.write(line);
       break;
@@ -150,6 +153,8 @@ function showMenu() {
   console.log(chalk.yellowBright.bold("11. disconnect from Group"));
   console.log(chalk.yellowBright.bold("12. change password"));
   console.log(chalk.yellowBright.bold("13. Remove User from Group"));
+  console.log(chalk.yellowBright.bold("14. Logout"));
+
   console.log(chalk.blueBright.bold("Enter a command number:"));
 }
 
