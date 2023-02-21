@@ -31,5 +31,4 @@ async function register_user(username, password) {
   console.log(Chalk.green.bold("Registration Successfull🤩🤩 "));
   client.close();
 }
-
 module.exports = { register_user };

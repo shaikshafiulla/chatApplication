@@ -1,7 +1,7 @@
 const net = require("net");
 const multimap = require("multimap");
 const chalk = require("chalk");
-
+const pswd = require('./pswdchange');
 
 var nextClientNumber = 1;
 var activeClients = new Set();
@@ -24,9 +24,9 @@ const server = net.createServer((socket) => {
 
   socket.on("data", (data) => {
     var message = data.toString().trim();
-    console.log(chalk.blue.bgYellow.bold(socket.id + " : " + message));
+    // console.log(chalk.blue.bgYellow.bold(socket.id + " : " + message));
     message = message.split(".");
-    console.log(chalk.blue.bgRed.bold(message[0]));
+    console.log(chalk.blue.bgRed.bold(message));
 
     if (!isNaN(message[0])) {
       const request = Number(message[0]);
@@ -53,6 +53,7 @@ const server = net.createServer((socket) => {
           break;
 
         case 4:
+
           data = "";
           for (const element of activeClients) {
             if (element!= socket.id) 
@@ -83,9 +84,16 @@ const server = net.createServer((socket) => {
         case 11:
           GroupDisconnect(socket, message);
           break;
+        case 12:
+          if(pswd.change_pswd(socket.username, socket.password,message[1].trim()))
+          socket.password = message[1].trim();
+          break;
+          
+          
+
       }
     } else {
-      let message = data.toString().trim().split(".");
+      // let message = data.toString().trim().split(".");
       if (!isNaN(message[1])) {
         const recepient = SOCKETS[Number(message[1])];
         if (recepient) {
@@ -104,12 +112,13 @@ const server = net.createServer((socket) => {
           if(recepient!=socket)
           recepient.write(message + "\n");
         }
-      } else if(!addingStatus){
+      } else if(!addingStatus && message[2]=='#'){
         socket.username = message[0];
+        socket.password = message[1];
         addStatus = true;
       }
       else{
-        socket.write(" INVALID REQUEST !!\n");
+        socket.write(" INVALID ENTRY!!\n");
       }
 
       // }

@@ -1,7 +1,8 @@
 const net = require("net");
 const readline = require("readline");
-const {username,password} = require("./start");
+const { username, password } = require("./start");
 const chalk = require("chalk");
+const inquirer = require("inquirer");
 const term = require("terminal-kit").terminal;
 
 const rl = readline.createInterface({
@@ -11,12 +12,12 @@ const rl = readline.createInterface({
 const heading = "Welcome to the chat session";
 const footer = "Press '0' for HELP\n";
 
-  const client = new net.Socket();
-  client.connect(8080, "localhost", () => {
-    client.write(`${username}.${password}`);
-    console.log(chalk.greenBright.bold("Connected to server  🥳"));
-    showMenu();
-  });
+const client = new net.Socket();
+client.connect(8080, "localhost", () => {
+  client.write(`${username}.${password}.#`);
+  console.log(chalk.greenBright.bold("Connected to server  🥳"));
+  showMenu();
+});
 
 client.on("data", (data) => {
   term.clear();
@@ -36,6 +37,7 @@ client.on("close", () => {
 rl.on("line", async (line) => {
   switch (line) {
     case "0":
+      term.clear();
       showMenu();
       break;
     case "1":
@@ -100,6 +102,19 @@ rl.on("line", async (line) => {
         }
       );
       break;
+    case "12":
+      rl.question(chalk.greenBright.bold("Change password : "), async (pwd) => {
+        if(await validatePassword(pwd))
+        client.write(`12. ${pwd}`);
+        else{
+          console.log(
+            chalk.red.bold(
+              "🧐 Password must contain at least one upper case letter, one lower case letter, one number 🧐 "
+            )
+          );
+        }
+      });
+      break;
     default:
       client.write(line);
       break;
@@ -119,7 +134,17 @@ function showMenu() {
   console.log(chalk.yellowBright.bold("9. Get request"));
   console.log(chalk.yellowBright.bold("10. Accept request"));
   console.log(chalk.yellowBright.bold("11. disconnect from Group"));
+  console.log(chalk.yellowBright.bold("12. change password"));
+
   console.log(chalk.blueBright.bold("Enter a command number:"));
 }
 
-
+async function validatePassword(value) {
+  const regex =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+  const res = regex.test(value);
+  if (res == false) {
+    return false;
+  }
+  return true;
+}
