@@ -87,7 +87,11 @@ async function LoginClient() {
       console.log(chalk.yellowBright.bold("welcome"));
       require("./client");
     }
-    return false;
+    else{
+      term.clear();
+    console.log(chalk.red.bold(" Oops!!! Incorrect Password😐"));
+    await LoginClient();
+    }
   });
 }
 

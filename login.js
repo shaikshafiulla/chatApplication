@@ -13,6 +13,7 @@ async function login_user(username, password) {
     .db(database)
     .collection(collection)
     .findOne({ username: username });
+    if(result){
   const decrypted = crypto.privateDecrypt(
     result["private_Key"],
     Buffer.from(result["password"].toString("base64"), "base64")
@@ -21,10 +22,15 @@ async function login_user(username, password) {
     client.close();
     console.log(chalk.green.bold("Login Successfull🤩🤩"));
 
-    return chalk.green.bold("Login Successfull🤩🤩");
+    return true;//chalk.green.bold("Login Successfull🤩🤩");
+  }else{
+    client.close();
+  // console.log(chalk.red.bold(" Oops!!! Incorrect Password😐"));
+  return false;
   }
-  client.close();
-  console.log(chalk.red.bold(" Oops!!! Incorrect Password😐"));
-  return false; 
+}
+return false;
+
+   
 }
 module.exports = { login_user };

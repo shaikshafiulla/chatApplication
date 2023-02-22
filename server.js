@@ -12,6 +12,7 @@ var chatreq = new multimap();
 var coordinated = new multimap();
 var groupAdmins = new Map();
 var addingStatus = false;
+var LoginStatus = new Set();
 const server = net.createServer((socket) => {
   const clientNumber = nextClientNumber++;
   console.log(chalk.blue.bold(`Client ${clientNumber} connected 🙌😉`));
@@ -121,9 +122,18 @@ const server = net.createServer((socket) => {
           if (recepient != socket) recepient.write(message + "\n");
         }
       } else if (!addingStatus && message[2] == "#") {
-        socket.username = message[0];
+        if(LoginStatus.has(message[0])){
+          socket.write(message[0] + " is already logged in\n please logout the previous session to continue");
+          activeClients.delete(socket.id);
+          delete SOCKETS[socket.id];
+          socket.destroy();
+        }
+        else{
+          socket.username = message[0];
         socket.password = message[1];
-        addStatus = true;
+        LoginStatus.add(message[0]);
+         addStatus = true;
+        }
       } else {
         socket.write(" INVALID ENTRY!!\n");
       }
@@ -161,9 +171,7 @@ const server = net.createServer((socket) => {
 });
 
 server.on("error", (err) => {
-  console.error(chalk.blue.bgRed.bold(`${err.message}`));
-  throw err;
-  
+  console.error(chalk.blue.bgRed.bold(`hey,server is down !! Please try again after some time`));
 });
 
 function requestChat(socket, message) {

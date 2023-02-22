@@ -31,8 +31,14 @@ client.on("data", (data) => {
   console.log(chalk.blue.bold(data.toString()));
 });
 
+client.on("error", (err) => {
+  console.log(chalk.redBright.bold("Hey!! Something went wrong at server side\n try again later.."));
+  
+});
+
 client.on("close", () => {
-  console.log("Connection closed");
+  console.log(chalk.blueBright.bold("Connection closed"));
+  process.exit();
 });
 
 rl.on("line", async (line) => {
