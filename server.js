@@ -119,7 +119,7 @@ const server = net.createServer((socket) => {
         for (let value of values) {
           recepientId = value;
           recepient = SOCKETS[recepientId];
-          if (recepient != socket) recepient.write(message + "\n");
+          if (recepient != socket) recepient.write(`${socket.username} : ${message}\n`);
         }
       } else if (!addingStatus && message[2] == "#") {
         if(LoginStatus.has(message[0])){
@@ -171,7 +171,7 @@ const server = net.createServer((socket) => {
 });
 
 server.on("error", (err) => {
-  console.error(chalk.blue.bgRed.bold(`hey,server is down !! Please try again after some time`));
+  console.error(chalk.blue.bgRed.bold(`hey,server is down !! Please try again after some time 🥹`));
 });
 
 function requestChat(socket, message) {

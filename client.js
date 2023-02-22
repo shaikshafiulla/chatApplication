@@ -32,7 +32,7 @@ client.on("data", (data) => {
 });
 
 client.on("error", (err) => {
-  console.log(chalk.redBright.bold("Hey!! Something went wrong at server side\n try again later.."));
+  console.log(chalk.redBright.bold("Hey!! Something went wrong at server side 🥹 \n try again later.."));
   
 });
 
