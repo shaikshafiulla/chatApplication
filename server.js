@@ -56,10 +56,13 @@ const server = net.createServer((socket) => {
         case 4:
           data = "";
           for (const element of activeClients) {
-            if (element != socket.id) data += element.toString() + " ";
+            if (element != socket.id) {
+              recepient = SOCKETS[element];
+              data += element.toString() + "  " + recepient.username + "\n";
+            }
           }
           socket.write(
-            `-----> ${activeClients.size - 1} active clients\n ${data}`
+            `--> ${activeClients.size - 1} active clients\nID  Name\n${data}`
           );
           break;
 
@@ -119,20 +122,23 @@ const server = net.createServer((socket) => {
         for (let value of values) {
           recepientId = value;
           recepient = SOCKETS[recepientId];
-          if (recepient != socket) recepient.write(`${socket.username} : ${message}\n`);
+          if (recepient != socket)
+            recepient.write(`${socket.username} : ${message}\n`);
         }
       } else if (!addingStatus && message[2] == "#") {
-        if(LoginStatus.has(message[0])){
-          socket.write(message[0] + " is already logged in\n please logout the previous session to continue");
+        if (LoginStatus.has(message[0])) {
+          socket.write(
+            message[0] +
+              " is already logged in\n please logout the previous session to continue"
+          );
           activeClients.delete(socket.id);
           delete SOCKETS[socket.id];
           socket.destroy();
-        }
-        else{
+        } else {
           socket.username = message[0];
-        socket.password = message[1];
-        LoginStatus.add(message[0]);
-         addStatus = true;
+          socket.password = message[1];
+          LoginStatus.add(message[0]);
+          addStatus = true;
         }
       } else {
         socket.write(" INVALID ENTRY!!\n");
@@ -171,7 +177,11 @@ const server = net.createServer((socket) => {
 });
 
 server.on("error", (err) => {
-  console.error(chalk.blue.bgRed.bold(`hey,server is down !! Please try again after some time 🥹`));
+  console.error(
+    chalk.blue.bgRed.bold(
+      `hey,server is down !! Please try again after some time 🥹`
+    )
+  );
 });
 
 function requestChat(socket, message) {
@@ -189,7 +199,8 @@ function getRequests(socket) {
   let values = chatreq.get(socket.id);
   if (values != undefined) {
     for (let i = 0; i < values.length; i++) {
-      data += values[i].toString() + " ";
+      recepient = SOCKETS[values[i]];
+      data += values[i].toString() + ". " + recepient.username + "\n";
     }
     if (data != "") socket.write(data);
     else socket.write(chalk.blue.bold("No requests.. 🤞"));
@@ -274,10 +285,10 @@ function createGroup(message, socket) {
 function activeGroups(socket) {
   data = "";
   for (const element of activegroups) {
-    data += element.toString() + " ";
+    data += element.toString() + "\n";
   }
-  if (data != "") socket.write(`active groups are ${data}`);
-  else socket.write(`active groups are empty 💁‍♂️`);
+  if (data != "") socket.write(`active groups are : \n\n${data}`);
+  else socket.write(`active groups are empty 💁‍♂️ `);
 }
 
 function disconnect(socket, message) {
@@ -413,5 +424,4 @@ function Logout(socket) {
   );
   delete SOCKETS[socket.id];
   activeClients.delete(socket.id);
-
 }
