@@ -54,16 +54,17 @@ const server = net.createServer((socket) => {
           break;
 
         case 4:
-          data = "";
-          for (const element of activeClients) {
-            if (element != socket.id) {
-              recepient = SOCKETS[element];
-              data += element.toString() + "  " + recepient.username + "\n";
-            }
-          }
-          socket.write(
-            `--> ${activeClients.size - 1} active clients\nID  Name\n${data}`
-          );
+          // data = "";
+          // for (const element of activeClients) {
+          //   if (element != socket.id) {
+          //     recepient = SOCKETS[element];
+          //     data += element.toString() + "  " + recepient.username + "\n";
+          //   }
+          // }
+          // socket.write(
+          //   `--> ${activeClients.size - 1} active clients\nID  Name\n${data}`
+          // );
+          active(socket);
           break;
 
         case 5:
@@ -179,7 +180,7 @@ const server = net.createServer((socket) => {
 server.on("error", (err) => {
   console.error(
     chalk.blue.bgRed.bold(
-      `hey,server is down !! Please try again after some time 🥹`
+      `hey,server is down !!\nPlease try again after some time 🥹`
     )
   );
 });
@@ -188,9 +189,13 @@ function requestChat(socket, message) {
   const recepient = SOCKETS[Number(message[1])];
   if (recepient) {
     chatreq.set(recepient.id, socket.id);
-    socket.write(chalk.blueBright.bold("  Request sent  😍"));
+    socket.write(
+      chalk.blueBright.bold(`  Request sent to ${recepient.username}`)
+    );
   } else {
-    socket.write(chalk.blue.bold("...🫥 Invalid client number 🫥...."));
+    socket.write(
+      `chalk.blue.bold("..🫥 Invalid client number 🫥..")\nPlease check the active clients and try again`
+    );
   }
 }
 
@@ -217,8 +222,8 @@ function acceptRequest(socket, message) {
   if (recepient) {
     for (let i = 0; i < values.length; i++) {
       if (values[i] == message[1]) {
-        socket.write("accepted chat request 🤩");
-        recepient.write(`${socket.id} accepted chat request 🤩`);
+        socket.write(` You accepted ${recepient.username} chat request 🤩\nyou can send a message by pressing command "7"`);
+        recepient.write(`${socket.username} accepted chat request 🤩`);
         coordinated.set(socket.id, recepient.id);
         coordinated.set(recepient.id, socket.id);
         chatreq.delete(socket.id, recepient.id);
@@ -394,6 +399,19 @@ function removeUserFromGroup(socket, message) {
   } else {
     socket.write(chalk.redBright.bold(" Invalid details........"));
   }
+}
+
+function active(socket) {
+  data = "";
+  for (const element of activeClients) {
+    if (element != socket.id) {
+      recepient = SOCKETS[element];
+      data += element.toString() + "  " + recepient.username + "\n";
+    }
+  }
+  socket.write(
+    `--> ${activeClients.size - 1} active clients\nID  Name\n${data}`
+  );
 }
 
 function Logout(socket) {
