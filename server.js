@@ -194,7 +194,7 @@ function requestChat(socket, message) {
     );
   } else {
     socket.write(
-      `chalk.blue.bold("..🫥 Invalid client number 🫥..")\nPlease check the active clients and try again`
+      `chalk.blue.bold(..🫥 Invalid client number 🫥..\nPlease check the active clients and try again)`
     );
   }
 }
@@ -222,7 +222,9 @@ function acceptRequest(socket, message) {
   if (recepient) {
     for (let i = 0; i < values.length; i++) {
       if (values[i] == message[1]) {
-        socket.write(` You accepted ${recepient.username} chat request 🤩\nyou can send a message by pressing command "7"`);
+        socket.write(
+          ` You accepted ${recepient.username} chat request 🤩\nyou can send a message by pressing command "7"`
+        );
         recepient.write(`${socket.username} accepted chat request 🤩`);
         coordinated.set(socket.id, recepient.id);
         coordinated.set(recepient.id, socket.id);
@@ -343,6 +345,7 @@ function deleteGroup(socket, message) {
         clientid = value;
         client = SOCKETS[clientid];
         client.isGroupChatting = false;
+        client.write(`Group ${message[1]} deleted successfully 🤕`);
       }
       activegroups.delete(message[1]);
       groupAdmins.delete(message[1]);
