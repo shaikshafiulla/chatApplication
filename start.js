@@ -60,7 +60,7 @@ const LoginQuestions = [
     message: chalk.blueBright.bold("🤠 " + "Enter your username:"),
   },
   {
-    type: "input",
+    type: "password",
     name: "password",
     mask: "•",
     message: chalk.blueBright.bold("🔑 " + "Enter your password:"),
