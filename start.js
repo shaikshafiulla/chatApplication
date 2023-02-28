@@ -4,7 +4,7 @@ const chalk = require("chalk");
 const exists = require("./usernameExist");
 const term = require("terminal-kit").terminal;
 const inquirer = require("inquirer");
-var username,password;
+var username, password;
 
 const regristration_prompt = [
   {
@@ -31,7 +31,9 @@ const regristration_prompt = [
       const res = regex.test(value);
       if (res == false) {
         return chalk.red.bold(
-          chalk.redBright.bold("🧐 Password must contain at least one upper case letter, one lower case letter, one number 🧐 ")
+          chalk.redBright.bold(
+            "🧐 Password must contain at least one upper case letter, one lower case letter, one number 🧐 "
+          )
         );
       }
       return res;
@@ -43,7 +45,11 @@ const StartupQuestions = [
   {
     type: "list",
     name: "options",
-    choices: [chalk.blueBright.bold("1. Register"), chalk.blueBright.bold("2. Login"),chalk.blueBright.bold("3. Quit")],
+    choices: [
+      chalk.blueBright.bold("1. Register"),
+      chalk.blueBright.bold("2. Login"),
+      chalk.blueBright.bold("3. Quit"),
+    ],
   },
 ];
 
@@ -81,16 +87,17 @@ async function LoginClient() {
     if (data) {
       username = answers.username;
       password = answers.password;
-      module.exports = {username,password};
+      privatekey = data.privatekey;
+      publickey = data.publickey;
+      module.exports = { username, password, privatekey, publickey };
       term.clear();
       console.log(chalk.green.bold("Login Successfull🤩🤩\n"));
       console.log(chalk.yellowBright.bold("welcome"));
       require("./client");
-    }
-    else{
+    } else {
       term.clear();
-    console.log(chalk.red.bold(" Oops!!! Incorrect Password😐"));
-    await LoginClient();
+      console.log(chalk.red.bold(" Oops!!! Incorrect Password😐"));
+      await LoginClient();
     }
   });
 }
@@ -103,18 +110,16 @@ async function startup() {
 
     if (ans.options == chalk.blueBright.bold("2. Login")) {
       term.clear();
-      term.cyan(chalk.yellowBright.bold(" Login Page \n"))
+      term.cyan(chalk.yellowBright.bold(" Login Page \n"));
       await LoginClient();
       status = true;
-    } else if(ans.options == chalk.blueBright.bold("1. Register")){
+    } else if (ans.options == chalk.blueBright.bold("1. Register")) {
       term.clear();
-      term.cyan(chalk.yellowBright.bold(" Regristration \n"))
+      term.cyan(chalk.yellowBright.bold(" Regristration \n"));
       await RegisterClient();
-    } 
-    else process.exit();
+    } else process.exit();
   }
 }
-
 
 startup();
 

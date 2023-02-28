@@ -27,7 +27,9 @@ const server = net.createServer((socket) => {
     var message = data.toString().trim();
     // console.log(chalk.blue.bgYellow.bold(socket.id + " : " + message));
     message = message.split(".");
-    console.log(chalk.blue.bgRed.bold(`received message from ${socket.id}`));
+    console.log(
+      chalk.blue.bgCyan.bold(`${socket.id} : ${data.toString().trim()}`)
+    );
 
     if (!isNaN(message[0])) {
       const request = Number(message[0]);
@@ -105,6 +107,9 @@ const server = net.createServer((socket) => {
         case 14:
           Logout(socket);
           break;
+        case 15:
+          sendPublicKey(socket, message);
+          break;
       }
     } else {
       // let message = data.toString().trim().split(".");
@@ -112,7 +117,7 @@ const server = net.createServer((socket) => {
         const recepient = SOCKETS[Number(message[1])];
         if (recepient) {
           if (coordinated.has(socket.id, recepient.id))
-            recepient.write(`${socket.username} : ${message[0].toString()}`);
+            recepient.write(`${socket.username}-->${message[0].toString()} &`);
           else socket.write("🫥 not initiated chat with this client 🫥");
         } else {
           socket.write("🫥 invalid recepient id 🫥\n");
@@ -126,7 +131,7 @@ const server = net.createServer((socket) => {
           if (recepient != socket)
             recepient.write(`${socket.username} : ${message}\n`);
         }
-      } else if (!addingStatus && message[2] == "#") {
+      } else if (!addingStatus && message[4] == "#") {
         if (LoginStatus.has(message[0])) {
           socket.write(
             message[0] +
@@ -136,10 +141,14 @@ const server = net.createServer((socket) => {
           delete SOCKETS[socket.id];
           socket.destroy();
         } else {
+          //adding the client details
           socket.username = message[0];
           socket.password = message[1];
+          socket.privatekey = message[2];
+          socket.publickey = message[3];
+
           LoginStatus.add(message[0]);
-          addStatus = true;
+          // addingStatus = true;
         }
       } else {
         socket.write(" INVALID ENTRY!!\n");
@@ -191,6 +200,11 @@ function requestChat(socket, message) {
     chatreq.set(recepient.id, socket.id);
     socket.write(
       chalk.blueBright.bold(`  Request sent to ${recepient.username}`)
+    );
+    recepient.write(
+      chalk.blueBright.bold(
+        `hey!! you have a new chat request from ${socket.username}\n`
+      )
     );
   } else {
     socket.write(
@@ -445,4 +459,12 @@ function Logout(socket) {
   );
   delete SOCKETS[socket.id];
   activeClients.delete(socket.id);
+}
+
+function sendPublicKey(socket, message) {
+  recepient = SOCKETS[Number(message[1])];
+  if (recepient) {
+    socket.write(`${recepient.publickey} @`);
+    recepient.write(`${socket.publickey} @`);
+  }
 }

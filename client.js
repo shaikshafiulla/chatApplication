@@ -1,9 +1,10 @@
 const net = require("net");
 const readline = require("readline");
-const { username, password } = require("./start");
+var { username, password, privatekey, publickey } = require("./start");
 const chalk = require("chalk");
 const inquirer = require("inquirer");
 const term = require("terminal-kit").terminal;
+const crypto = require("crypto");
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -14,26 +15,46 @@ const footer = "Press '0' for HELP\n";
 
 const client = new net.Socket();
 client.connect(8080, "localhost", () => {
-  client.write(`${username}.${password}.#`);
+  client.write(`${username}.${password}.${privatekey}.${publickey}.#`);
   console.log(chalk.greenBright.bold("Connected to server  🥳"));
   showMenu();
 });
 
 client.on("data", (data) => {
+  let arr = data.toString().split(" ");
+  if (arr[5] == "@") {
+    publickey = data.toString().split("@")[0];
+    // console.log(publickey);
+  } else if (arr[1] == "&") {
+    let arr2 = arr[0].toString().split(">");
+    let msgreceived = decrypt(arr2[1]);
 
-  term.clear();
-  term.cyan(
-    chalk.greenBright.bold(heading) +
-      " 🤟" +
-      "\n" +
-      chalk.yellowBright.bold(footer)
-  );
-  console.log(chalk.blue.bold(data.toString()));
+    term.clear();
+    term.cyan(
+      chalk.greenBright.bold(heading) +
+        " 🤟" +
+        "\n" +
+        chalk.yellowBright.bold(footer)
+    );
+    console.log(chalk.blue.bold(`${arr2[0]} : ${msgreceived.toString()}`));
+  } else {
+    term.clear();
+    term.cyan(
+      chalk.greenBright.bold(heading) +
+        " 🤟" +
+        "\n" +
+        chalk.yellowBright.bold(footer)
+    );
+    console.log(chalk.blue.bold(data.toString()));
+  }
 });
 
 client.on("error", (err) => {
-  console.log(chalk.redBright.bold("Hey!! Something went wrong at server side 🥹 \n try again later.."));
-  
+  console.log(
+    chalk.redBright.bold(
+      "Hey!! Something went wrong at server side 🥹 \n try again later.."
+    )
+  );
 });
 
 client.on("close", () => {
@@ -84,14 +105,7 @@ rl.on("line", async (line) => {
       });
       break;
     case "7":
-      rl.question(
-        chalk.greenBright.bold("enter Recepient id : "),
-        (recepientId) => {
-          rl.question(chalk.cyanBright.bold("Enter message : "), (data) => {
-            client.write(`${data}.${recepientId}`);
-          });
-        }
-      );
+      publickeyreq();
       break;
     case "8":
       rl.question(chalk.greenBright.bold("Enter clientId : "), (id) => {
@@ -117,9 +131,8 @@ rl.on("line", async (line) => {
       break;
     case "12":
       rl.question(chalk.greenBright.bold("Change password : "), async (pwd) => {
-        if(await validatePassword(pwd))
-        client.write(`12. ${pwd}`);
-        else{
+        if (await validatePassword(pwd)) client.write(`12. ${pwd}`);
+        else {
           console.log(
             chalk.red.bold(
               "🧐 Password must contain at least one upper case letter, one lower case letter, one number 🧐 "
@@ -129,16 +142,22 @@ rl.on("line", async (line) => {
       });
       break;
     case "13":
-      rl.question(
-        chalk.greenBright.bold("Enter recepient id : "),
-        (id) => {
-          client.write(`13. ${id}`);
-        }
-      );
+      rl.question(chalk.greenBright.bold("Enter recepient id : "), (id) => {
+        client.write(`13. ${id}`);
+      });
       break;
     case "14":
-        client.write(`14.`);
-        process.exit();
+      client.write(`14.`);
+      process.exit();
+    // case "15":
+    //   rl.question(
+    //     chalk.greenBright.bold("enter Recepient id : "),
+    //     (recepientId) => {
+    //       client.write(`15.${recepientId}`);
+    //     }
+    //   );
+    //   break;
+
     default:
       client.write(line);
       break;
@@ -173,4 +192,36 @@ async function validatePassword(value) {
     return false;
   }
   return true;
+}
+
+function encrypt(text, publicKey) {
+  const encrypted = crypto.publicEncrypt(publicKey, Buffer.from(text));
+  text = encrypted.toString("base64");
+  return text;
+}
+
+function decrypt(text) {
+  const decrypted = crypto.privateDecrypt(
+    privatekey,
+    Buffer.from(text.toString("base64"), "base64")
+  );
+  return decrypted.toString();
+}
+
+async function publickeyreq() {
+  rl.question(
+    chalk.greenBright.bold("enter Recepient id : "),
+    (recepientId) => {
+      client.write(`15.${recepientId}`);
+      message(recepientId);
+    }
+  );
+}
+
+function message(recepientId) {
+  rl.question(chalk.cyanBright.bold("Enter message : "), (data) => {
+    data = encrypt(data, publickey);
+    console.log(`encrypted data : ${chalk.green.bold(data)}`);
+    client.write(`${data}.${recepientId}`);
+  });
 }
