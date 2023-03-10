@@ -221,7 +221,7 @@ async function publickeyreq() {
 function message(recepientId) {
   rl.question(chalk.cyanBright.bold("Enter message : "), (data) => {
     data = encrypt(data, publickey);
-    console.log(`encrypted data : ${chalk.green.bold(data)}`);
+    // console.log(`encrypted data : ${chalk.green.bold(data)}`);
     client.write(`${data}.${recepientId}`);
   });
 }
